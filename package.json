@@ -1,6 +1,6 @@
 {
   "name": "education-mcp",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "AI-powered education tools for teachers and students — quizzes, lesson plans, flashcards, explanations, exercises, and rubrics via MCP",
   "author": "SceneView Tools",
   "license": "MIT",
@@ -26,12 +26,12 @@
     "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1"
+    "@modelcontextprotocol/sdk": "^1.29.0"
   },
   "devDependencies": {
-    "@types/node": "^22.15.2",
+    "@types/node": "^22.15.3",
     "typescript": "^5.8.3",
-    "vitest": "^3.1.1"
+    "vitest": "^3.1.4"
   },
   "keywords": [
     "mcp",
@@ -51,5 +51,15 @@
   "homepage": "https://github.com/mcp-tools-lab/education-mcp#readme",
   "engines": {
     "node": ">=18"
-  }
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/sceneview"
+    },
+    {
+      "type": "polar",
+      "url": "https://polar.sh/sceneview"
+    }
+  ]
 }
