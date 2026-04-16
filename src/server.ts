@@ -13,6 +13,9 @@ import {
   explainConcept,
   generateExercise,
   gradeRubric,
+  searchPapers,
+  getAuthorProfile,
+  getCitationStats,
 } from "./tools/index.js";
 import { RATE_LIMITS } from "./types.js";
 
@@ -22,9 +25,10 @@ import { RATE_LIMITS } from "./types.js";
 export function createServer(): McpServer {
   const server = new McpServer({
     name: "education-mcp",
-    version: "1.0.0",
+    version: "1.1.0",
     description:
-      "AI-powered education tools for teachers and students. Generate quizzes, lesson plans, flashcards, concept explanations, exercises, and grading rubrics.",
+      "AI-powered education tools for teachers and students. Generate quizzes, lesson plans, flashcards, concept explanations, exercises, and grading rubrics. " +
+      "Search 250M+ academic papers, look up researchers, and get citation stats via OpenAlex.",
   });
 
   // ── generate_quiz ──────────────────────────────────────────────────────────
@@ -204,6 +208,84 @@ export function createServer(): McpServer {
         return {
           content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
         };
+      } catch (err: any) {
+        return {
+          content: [{ type: "text" as const, text: `Error: ${err.message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── search_papers (OpenAlex API) ────────────────────────────────────────────
+
+  server.tool(
+    "search_papers",
+    "Search 250M+ academic papers via OpenAlex (free, no auth). Returns title, authors, " +
+      "year, journal, citation count, DOI, abstract snippet, topics, and open access URL. " +
+      "Supports filtering by year range, domain, minimum citations, publication type, and " +
+      "sorting by relevance, citation count, or date. Great for literature reviews and research.",
+    {
+      query: z.string().min(1).describe("Search query — topic, keywords, or phrase (e.g., 'machine learning in education', 'CRISPR gene editing')"),
+      per_page: z.number().int().min(1).max(25).optional().describe("Results to return (default: 5, max: 25)"),
+      year_from: z.number().int().optional().describe("Filter: earliest publication year (e.g., 2020)"),
+      year_to: z.number().int().optional().describe("Filter: latest publication year (e.g., 2024)"),
+      open_access_only: z.boolean().optional().describe("Only return open access papers with full text available (default: false)"),
+      domain: z.string().optional().describe("Academic domain to focus on (e.g., 'medicine', 'computer science', 'biology', 'psychology'). Improves relevance for interdisciplinary queries."),
+      min_citations: z.number().int().min(0).optional().describe("Minimum citation count — use to filter for high-impact papers (e.g., 50 = papers cited at least 50 times)"),
+      sort_by: z.enum(["relevance", "citations", "date"]).optional().describe("Sort order: 'relevance' (default, best text match), 'citations' (most cited first — best for finding seminal works), 'date' (newest first)"),
+      type: z.enum(["article", "review", "preprint", "book-chapter"]).optional().describe("Publication type filter: 'article' (peer-reviewed), 'review' (systematic reviews/meta-analyses), 'preprint', 'book-chapter'"),
+    },
+    async (args) => {
+      try {
+        const text = await searchPapers(args);
+        return { content: [{ type: "text" as const, text }] };
+      } catch (err: any) {
+        return {
+          content: [{ type: "text" as const, text: `Error: ${err.message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── get_author_profile (OpenAlex API) ──────────────────────────────────────
+
+  server.tool(
+    "get_author_profile",
+    "Look up a researcher by name via OpenAlex. Returns institution, h-index, " +
+      "citation count, works count, and top research topics. Useful for finding " +
+      "experts or checking a researcher's impact.",
+    {
+      name: z.string().min(1).describe("Researcher name to search (e.g., 'Yann LeCun', 'Marie Curie')"),
+      per_page: z.number().int().min(1).max(10).optional().describe("Number of results (default: 3, max: 10)"),
+    },
+    async (args) => {
+      try {
+        const text = await getAuthorProfile(args);
+        return { content: [{ type: "text" as const, text }] };
+      } catch (err: any) {
+        return {
+          content: [{ type: "text" as const, text: `Error: ${err.message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── get_citation_stats (OpenAlex API) ──────────────────────────────────────
+
+  server.tool(
+    "get_citation_stats",
+    "Get citation metrics for a specific paper by DOI via OpenAlex. Returns citation " +
+      "count, referenced works, open access status, concepts, and yearly citation trend.",
+    {
+      doi: z.string().min(1).describe("Paper DOI (e.g., '10.1038/s41586-021-03819-2' or 'https://doi.org/10.1038/s41586-021-03819-2')"),
+    },
+    async (args) => {
+      try {
+        const text = await getCitationStats(args);
+        return { content: [{ type: "text" as const, text }] };
       } catch (err: any) {
         return {
           content: [{ type: "text" as const, text: `Error: ${err.message}` }],
