@@ -16,6 +16,7 @@ import {
   searchPapers,
   getAuthorProfile,
   getCitationStats,
+  formatCitation,
 } from "./tools/index.js";
 import { RATE_LIMITS } from "./types.js";
 
@@ -286,6 +287,87 @@ export function createServer(): McpServer {
       try {
         const text = await getCitationStats(args);
         return { content: [{ type: "text" as const, text }] };
+      } catch (err: any) {
+        return {
+          content: [{ type: "text" as const, text: `Error: ${err.message}` }],
+          isError: true,
+        };
+      }
+    }
+  );
+
+  // ── format_citation ───────────────────────────────────────────────────────
+
+  server.tool(
+    "format_citation",
+    "Format an academic citation in APA 7th, MLA 9th, Chicago 17th (author-date), or Vancouver style. " +
+      "Supports journal articles, books, book chapters, websites, conference papers, theses, and preprints. " +
+      "Pair with search_papers to find a source via OpenAlex and then format it instantly.",
+    {
+      style: z
+        .enum(["apa", "mla", "chicago", "vancouver"])
+        .describe("Citation style: 'apa' (APA 7th), 'mla' (MLA 9th), 'chicago' (Chicago 17th author-date), 'vancouver' (medical/health sciences)"),
+      sourceType: z
+        .enum(["journal", "book", "chapter", "website", "conference", "thesis", "preprint"])
+        .describe("Type of source to cite"),
+      authors: z
+        .array(
+          z.object({
+            lastName: z.string().describe("Author's last name"),
+            firstName: z.string().optional().describe("Author's first name or given name"),
+            initials: z.string().optional().describe("Pre-computed initials (e.g. 'A. B.' — used in Vancouver style)"),
+          })
+        )
+        .describe("List of authors in order"),
+      title: z.string().describe("Title of the article, book, chapter, or web page"),
+      year: z
+        .union([z.number().int(), z.string()])
+        .optional()
+        .describe("Publication year (e.g. 2024). Leave empty if unknown."),
+      journal: z.string().optional().describe("Journal or periodical name (for journal articles and preprints)"),
+      volume: z.string().optional().describe("Volume number"),
+      issue: z.string().optional().describe("Issue number"),
+      pages: z.string().optional().describe("Page range (e.g. '123-145' or '12–34')"),
+      doi: z.string().optional().describe("DOI without the https://doi.org/ prefix (e.g. '10.1234/abc')"),
+      publisher: z.string().optional().describe("Publisher name (for books and chapters)"),
+      publisherCity: z.string().optional().describe("Publisher city (Chicago style)"),
+      bookTitle: z.string().optional().describe("Book title (for chapters within a book)"),
+      editors: z
+        .array(
+          z.object({
+            lastName: z.string(),
+            firstName: z.string().optional(),
+          })
+        )
+        .optional()
+        .describe("Book editors (for chapters)"),
+      websiteName: z.string().optional().describe("Website or platform name"),
+      url: z.string().optional().describe("Full URL"),
+      accessDate: z.string().optional().describe("Date the source was accessed (ISO 8601: 'YYYY-MM-DD') — required for websites"),
+      conferenceName: z.string().optional().describe("Conference name (for conference papers)"),
+      edition: z.string().optional().describe("Edition (e.g. '3rd' or '2nd revised')"),
+      institution: z.string().optional().describe("Institution name (for theses)"),
+      thesisType: z.string().optional().describe("Thesis type (e.g. 'PhD dissertation', \"Master's thesis\")"),
+    },
+    async (args) => {
+      try {
+        const result = formatCitation(args as any);
+        const lines = [
+          `## ${result.style} Citation — ${result.sourceType}`,
+          "",
+          `### Reference list entry`,
+          result.citation,
+          "",
+          `### In-text citation`,
+          result.inTextCitation,
+        ];
+        if (result.notes.length > 0) {
+          lines.push("", "### Notes");
+          for (const note of result.notes) {
+            lines.push(`- ${note}`);
+          }
+        }
+        return { content: [{ type: "text" as const, text: lines.join("\n") }] };
       } catch (err: any) {
         return {
           content: [{ type: "text" as const, text: `Error: ${err.message}` }],

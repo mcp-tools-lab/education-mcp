@@ -5,3 +5,4 @@ export { explainConcept } from "./explain-concept.js";
 export { generateExercise } from "./generate-exercise.js";
 export { gradeRubric } from "./grade-rubric.js";
 export { searchPapers, getAuthorProfile, getCitationStats } from "./openalex.js";
+export { formatCitation } from "./format-citation.js";
