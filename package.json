@@ -1,7 +1,7 @@
 {
   "name": "education-mcp",
-  "version": "1.0.4",
-  "description": "AI-powered education tools for teachers and students — quizzes, lesson plans, flashcards, explanations, exercises, and rubrics via MCP",
+  "version": "1.1.0",
+  "description": "AI-powered education tools — quizzes, lesson plans, flashcards, explanations, exercises, rubrics + academic paper search (OpenAlex 250M+ publications) via MCP",
   "author": "SceneView Tools",
   "license": "MIT",
   "type": "module",

@@ -14,6 +14,10 @@ Generate quizzes, lesson plans, flashcards, concept explanations, exercises, and
 | `explain_concept` | Age-appropriate explanations at beginner/intermediate/expert levels with analogies and examples |
 | `generate_exercise` | Math, physics, chemistry, biology, and CS exercises with step-by-step solutions |
 | `grade_rubric` | Grading rubrics for essays, presentations, projects, lab reports, and code assignments |
+| `search_papers` | Search 250M+ open-access papers via the [OpenAlex](https://openalex.org) API — free, no auth |
+| `get_author_profile` | Researcher profile with affiliations, h-index, publication count (OpenAlex) |
+| `get_citation_stats` | Per-year citation counts and breakdown for a paper or author (OpenAlex) |
+| `format_citation` | Format references in APA / MLA / Chicago / BibTeX from a DOI or OpenAlex ID |
 
 ## Quick Start
 
